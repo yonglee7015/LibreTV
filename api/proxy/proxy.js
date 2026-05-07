@@ -1,33 +1,34 @@
-export async function onRequest(context) {
-  const { request } = context;
+export async function onRequest({ request }) {
   const url = new URL(request.url);
-  const target = url.searchParams.get("url");
+  const imageUrl = url.searchParams.get('url');
 
-  if (!target) {
-    return new Response("Missing url parameter", { status: 400 });
+  if (!imageUrl) {
+    return new Response('Missing url parameter', { status: 400 });
   }
 
   try {
-    const res = await fetch(target, {
+    const response = await fetch(imageUrl, {
       headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Referer": "https://www.douban.com/",
-      },
-    });
-
-    const headers = new Headers();
-    res.headers.forEach((v, k) => {
-      if (["content-type", "content-length", "cache-control"].includes(k)) {
-        headers.set(k, v);
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36',
+        'Referer': 'https://movie.douban.com/'
       }
     });
-    headers.set("Access-Control-Allow-Origin", "*");
 
-    return new Response(res.body, {
-      status: res.status,
-      headers,
+    if (!response.ok) {
+      return new Response(`Fetch failed: ${response.status}`, { status: response.status });
+    }
+
+    const headers = new Headers({
+      'Content-Type': response.headers.get('content-type') || 'image/jpeg',
+      'Cache-Control': 'public, max-age=86400',
+      'Access-Control-Allow-Origin': '*'
     });
-  } catch (err) {
-    return new Response(err.message, { status: 500 });
+
+    return new Response(response.body, {
+      status: 200,
+      headers
+    });
+  } catch (error) {
+    return new Response(`Proxy error: ${error.message}`, { status: 500 });
   }
 }
