@@ -17,6 +17,43 @@
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/index.css">
 </head>
+<script>
+// 强制给所有豆瓣海报加上 img-proxy 代理
+document.addEventListener('DOMContentLoaded', function() {
+  // 拦截所有图片请求，自动替换为代理地址
+  document.addEventListener('error', function(e) {
+    if (e.target.tagName === 'IMG' && e.target.src.includes('doubanio.com')) {
+      const originalUrl = e.target.src;
+      // 替换为你的代理地址
+      e.target.src = '/img-proxy?url=' + encodeURIComponent(originalUrl);
+    }
+  }, true);
+
+  // 直接修改所有已加载的图片
+  function proxyAllImages() {
+    document.querySelectorAll('img').forEach(img => {
+      if (img.src.includes('doubanio.com') && !img.src.includes('/img-proxy?url=')) {
+        const originalUrl = img.src;
+        img.src = '/img-proxy?url=' + encodeURIComponent(originalUrl);
+      }
+    });
+  }
+
+  // 页面加载时执行一次
+  proxyAllImages();
+
+  // 监听新图片加载（比如换一批、翻页时）
+  const observer = new MutationObserver(function(mutations) {
+    mutations.forEach(function(mutation) {
+      if (mutation.addedNodes.length) {
+        proxyAllImages();
+      }
+    });
+  });
+
+  observer.observe(document.body, { childList: true, subtree: true });
+});
+</script>
 <body class="page-bg text-white">
     <!-- 将历史记录按钮移到左上角，并缩小尺寸 -->
     <div class="fixed top-4 left-4 z-10">
